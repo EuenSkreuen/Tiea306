@@ -20,7 +20,11 @@ namespace Tiea306
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+            //Luo ohjelmaa käynnistettäessä tallennukseen tarvittavan kansion ellei sitä ole jo olemassa.
+            if (!(Directory.Exists("simulations")))
+            {
+                Directory.CreateDirectory("simulations");
+            }                      
         }
     }
 }
