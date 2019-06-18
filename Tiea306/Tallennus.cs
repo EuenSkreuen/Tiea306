@@ -18,8 +18,7 @@ namespace Tiea306
         /// </summary>
         /// <param name="data">Tähtien sijainnit ja muut tiedot</param>
         /// <param name="name">Simulaation nimi</param>
-        /// <param name="frame">Simulaation askel</param>
-        public void tallenna(String data, String name, int frame)
+        public static void tallenna(String data, String name)
         {
             try
             {
@@ -27,7 +26,7 @@ namespace Tiea306
                 {
                     Directory.CreateDirectory("simulations/" + name);
                 }
-                BinaryWriter kirjoittaja = new BinaryWriter(new FileStream("simulations/"+name+"/"+name+"_"+frame.ToString(), FileMode.Create));
+                BinaryWriter kirjoittaja = new BinaryWriter(new FileStream("simulations/" + name+"/"+name, FileMode.Create));
                 kirjoittaja.Write(data);
                 kirjoittaja.Close();
             }
@@ -43,13 +42,12 @@ namespace Tiea306
         /// Tämä metodi lukee annetusta tiedostosta simulaation yhden askeleen tiedot.
         /// </summary>
         /// <param name="name">Simulaation nimi</param>
-        /// <param name="frame">Simulaation askel</param>
         /// <returns></returns>
-        public string lue(String name, int frame)
+        public static string lue(String name)
         {
             try
             {
-                BinaryReader lukija = new BinaryReader(new FileStream("simulations/" + name + "/" + name + "_" + frame.ToString(), FileMode.Open));
+                BinaryReader lukija = new BinaryReader(new FileStream("simulations/" + name + "/" + name, FileMode.Open));
                 String s = lukija.ReadString();
                 lukija.Close();
                 return s;
