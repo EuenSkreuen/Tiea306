@@ -52,6 +52,7 @@ namespace Tiea306
             // 
             // glControl1
             // 
+            this.glControl1.Animation = true;
             this.glControl1.AnimationTimer = false;
             this.glControl1.BackColor = System.Drawing.Color.DimGray;
             this.glControl1.ColorBits = ((uint)(24u));
