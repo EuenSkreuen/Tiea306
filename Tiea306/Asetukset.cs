@@ -33,15 +33,16 @@ namespace Tiea306
 
         private void aloita_Click(object sender, EventArgs e)
         {
+            double valovuosi_pc = 0.306594845;
             //Väliaikainen systeemi tähtien generointiin
             Kappale[] kappaleet = new Kappale[100];
             Random r = new Random();
             for(int i = 0; i < 100; i++)
             {
-                Vertex3d sijainti = new Vertex3d(r.NextDouble()*2-1, r.NextDouble()*2-1, r.NextDouble()*2-1);
+                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*2-1, r.NextDouble()*2-1, 0))*valovuosi_pc;
                 double massa = r.NextDouble();
-                Vertex3d kiihtyvyys = new Vertex3d(r.NextDouble(), r.NextDouble(), r.NextDouble());
-                Vertex3d nopeus = new Vertex3d(r.NextDouble(), r.NextDouble(), r.NextDouble());
+                Vertex3d kiihtyvyys = (new Vertex3d(r.NextDouble(), r.NextDouble(), 0))*valovuosi_pc;
+                Vertex3d nopeus = (new Vertex3d(r.NextDouble(), r.NextDouble(), 0))*valovuosi_pc;
                 kappaleet[i] = new Kappale(sijainti, massa, kiihtyvyys, nopeus);
             }
             new Simulaattori(kappaleet).Show();

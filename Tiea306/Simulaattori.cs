@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Threading;
+using System.Windows.Forms;
 using OpenGL;
 
 namespace Tiea306
@@ -34,7 +36,7 @@ namespace Tiea306
             foreach(Kappale k in kappaleet)
             {
                 Vertex3d s = k.Sijainti;                
-                Gl.Vertex3(s.x, s.y, s.z);                
+                Gl.Vertex3(norm(s.x), norm(s.y), norm(s.z));                
             }
             Gl.End();
             //Syvyystestausta varten, että näen milloin saan sen toimimaan. Vihreän ei pitäisi olla keskellä.
@@ -56,6 +58,15 @@ namespace Tiea306
             Gl.Vertex3(1.0f, -0.2f, 0.0f);
 
             Gl.End();
+
+            Console.WriteLine(kappaleet[0].Sijainti.x.ToString() + ", " + kappaleet[0].Sijainti.y.ToString());
+            Suora_Laskenta sl = new Suora_Laskenta();
+            sl.päivitä(kappaleet);
+            //Thread.Sleep(1000);            
+        }
+        private double norm(double a)
+        {
+            return (-1 + (a - -50) * (1 - a) / (50 - -50));
         }
     }
 }
