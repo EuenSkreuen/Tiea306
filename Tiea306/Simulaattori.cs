@@ -1,12 +1,11 @@
-﻿using System;
-using System.Threading;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using OpenGL;
 
 namespace Tiea306
 {
     public partial class Simulaattori : Form
     {
+        double valovuosi = 63239.7263;
         Kappale[] kappaleet;
         public Simulaattori(Kappale[] kappaleet)
         {
@@ -17,6 +16,7 @@ namespace Tiea306
 
         private void glControl1_ContextCreated(object sender, GlControlEventArgs e)
         {
+            //Oletan että täällä pitäisi tehdä jotain että saisi syvyystestauksen toimimaan
             Control senderControl = (Control)sender;
             Gl.Enable(EnableCap.DepthTest);
             Gl.DepthFunc(DepthFunction.Always);
@@ -29,17 +29,19 @@ namespace Tiea306
             Gl.Viewport(0, 0, senderControl.ClientSize.Width, senderControl.ClientSize.Height);
             Gl.Clear(ClearBufferMask.ColorBufferBit);
             Gl.Clear(ClearBufferMask.DepthBufferBit);
+
             //Piirretään piste jokaisen kappaleen sijaintiin
-            Gl.Begin(PrimitiveType.Points);
-            
+            Gl.Begin(PrimitiveType.Points);            
             Gl.Color3(1.0f, 1.0f, 1.0f);
             foreach(Kappale k in kappaleet)
             {
-                Vertex3d s = k.Sijainti;                
-                Gl.Vertex3(norm(s.x), norm(s.y), norm(s.z));                
+                Vertex3d s = k.Sijainti;
+                Gl.Vertex3(norm(s)); 
             }
             Gl.End();
+
             //Syvyystestausta varten, että näen milloin saan sen toimimaan. Vihreän ei pitäisi olla keskellä.
+            /*
             Gl.Begin(PrimitiveType.Triangles);
             //Punainen
             Gl.Color3(1.0f, 0.0f, 0.0f);
@@ -58,15 +60,25 @@ namespace Tiea306
             Gl.Vertex3(1.0f, -0.2f, 0.0f);
 
             Gl.End();
+            */
 
-            Console.WriteLine(kappaleet[0].Sijainti.x.ToString() + ", " + kappaleet[0].Sijainti.y.ToString());
+            //Varsinainen laskenta.
             Suora_Laskenta sl = new Suora_Laskenta();
-            sl.päivitä(kappaleet);
-            //Thread.Sleep(1000);            
+            sl.päivitä(kappaleet);           
         }
-        private double norm(double a)
+
+        /// <summary>
+        /// Skaalaa annetun pisteen niin että se sijoittuu simulaation alueelle.
+        /// </summary>
+        /// <param name="a">Piste jota skaalataan</param>
+        /// <returns></returns>
+        private Vertex3d norm(Vertex3d a)
         {
-            return (-1 + (a - -50) * (1 - a) / (50 - -50));
+            //TODO: aseta ottamaan kertoimet asetuksista
+            double x = (2 * (a.x + valovuosi * 10) / (valovuosi * 10 + valovuosi * 10)) - 1;
+            double y = (2 * (a.y + valovuosi * 10) / (valovuosi * 10 + valovuosi * 10)) - 1;
+            double z = (2 * (a.z + valovuosi * 10) / (valovuosi * 10 + valovuosi * 10)) - 1;
+            return new Vertex3d(x, y, z);
         }
     }
 }

@@ -1,23 +1,16 @@
 ﻿using OpenGL;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Tiea306
 {
     class Suora_Laskenta
     {
-        //TODO: Käytä mieluummin astronomista yksikköä?
-        //double gravitaatiovakio = 6.672e-11;
-        //double auringon_massa_kg = 1.9891e30;
-        //double valovuosi_m = 9.4605284e15;
-        //double vuosi_sekunneissa = 31556926;
-        double gravitaatiovakio = 0.00430091;
-        double auringon_massa = 1;
-        double valovuosi_pc = 0.306594845;
-        double vuosi_sekunneissa = 1;
+        //Gravitaatiovakio, kun massan yksikkö on auringon massa, matkassa käytetään astronomista yksikköä, ja ajan yksikkö on vuosi
+        double gravitaatiovakio = 4*Math.Pow(Math.PI,2);
+        //Valovuosi astronomisissa yksiköissä.
+        double valovuosi = 63239.7263;
+        //Aika-askel
+        double aika = 1000;
 
         /// <summary>
         /// Metodi kappaleiden sijaintien päivittämiseen.
@@ -36,16 +29,22 @@ namespace Tiea306
                 Vertex3d kiihtyvyys = new Vertex3d(0, 0, 0);
                 for (int j = 0; j < kappaleet.Length; j++)
                 {
+                    //Kappale ei vaikuta omaan liikkeeseensä.
                     if (i == j) { continue; }
+                    //Pehmennysparametri, poistaa laskennallisen singulariteetin mahdollisuuden.
+                    if (Etäisyys(kappaleet[i].Sijainti, kappaleet[j].Sijainti) < valovuosi * 0.01){ continue; }  
                     double massa_j = kappaleet[j].Massa;
                     Vertex3d sijainti_i = kappaleet[i].Sijainti;
                     Vertex3d sijainti_j = kappaleet[j].Sijainti;
-                    kiihtyvyys += (sijainti_i - sijainti_j) * massa_j / Math.Pow(Etäisyys(sijainti_i, sijainti_j), 3);
+                    //Lasketaan kappaleeseen kohdistuva kiihtyvyys kappaleesta j, ja summataan se yhteen aiempien kanssa.
+                    kiihtyvyys += (sijainti_i - sijainti_j) * massa_j / Math.Pow(Etäisyys(sijainti_i, sijainti_j), 3);  
                 }
+                //Lopulliseen kiihtyvyyteen otettava huomioon gravitaatiovakio.
                 kappaleet[i].Kiihtyvyys = kiihtyvyys * -gravitaatiovakio;
-                Vertex3d vanha_nopeus = kappaleet[i].Nopeus;
-                kappaleet[i].Nopeus = kappaleet[i].Nopeus + kappaleet[i].Kiihtyvyys * vuosi_sekunneissa;
-                kappaleet[i].Sijainti = vanha_nopeus*vuosi_sekunneissa + (kappaleet[i].Kiihtyvyys * 0.5) * vuosi_sekunneissa * vuosi_sekunneissa;
+                //Lasketaan kappaleen sijainti nopeuden, kiihtyvyyden ja aika-askeleen perusteella.
+                kappaleet[i].Sijainti += kappaleet[i].Nopeus * aika + kappaleet[i].Kiihtyvyys * 0.5 * Math.Pow(aika, 2);
+                //Lasketaan kappaleelle uusi nopeus vanhan nopeuden, kiihtyvyyden ja aika-askeleen perusteella.
+                kappaleet[i].Nopeus = kappaleet[i].Nopeus + kappaleet[i].Kiihtyvyys * aika;
             }
         }
 

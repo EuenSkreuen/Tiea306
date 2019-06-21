@@ -26,23 +26,22 @@ namespace Tiea306
             //TODO: kesken
             OpenFileDialog o = new OpenFileDialog();
             o.InitialDirectory = "simulations/";
-            o.Filter = "simulation files (*.siminfo)|*.siminfo";
             o.RestoreDirectory = true;
             o.ShowDialog();
         }
 
         private void aloita_Click(object sender, EventArgs e)
         {
-            double valovuosi_pc = 0.306594845;
-            //Väliaikainen systeemi tähtien generointiin
-            Kappale[] kappaleet = new Kappale[100];
+            double valovuosi = 63239.7263;
+            //TODO: Väliaikainen systeemi tähtien generointiin
+            Kappale[] kappaleet = new Kappale[500];
             Random r = new Random();
-            for(int i = 0; i < 100; i++)
+            for(int i = 0; i < 500; i++)
             {
-                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*2-1, r.NextDouble()*2-1, 0))*valovuosi_pc;
-                double massa = r.NextDouble();
-                Vertex3d kiihtyvyys = (new Vertex3d(r.NextDouble(), r.NextDouble(), 0))*valovuosi_pc;
-                Vertex3d nopeus = (new Vertex3d(r.NextDouble(), r.NextDouble(), 0))*valovuosi_pc;
+                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*2-1, r.NextDouble()*2-1, 0))*valovuosi;
+                double massa = r.NextDouble()*10;
+                Vertex3d kiihtyvyys = (new Vertex3d(0, 0, 0));
+                Vertex3d nopeus = (new Vertex3d(0 ,0, 0));
                 kappaleet[i] = new Kappale(sijainti, massa, kiihtyvyys, nopeus);
             }
             new Simulaattori(kappaleet).Show();

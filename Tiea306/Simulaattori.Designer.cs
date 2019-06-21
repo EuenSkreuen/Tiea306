@@ -36,7 +36,9 @@ namespace Tiea306
             this.panel1 = new System.Windows.Forms.Panel();
             this.glControl1 = new OpenGL.GlControl();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -71,10 +73,20 @@ namespace Tiea306
             // 
             this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel2.Controls.Add(this.label1);
             this.panel2.Location = new System.Drawing.Point(12, 12);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(121, 543);
             this.panel2.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(10, 11);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(89, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Kokonaisenergia:";
             // 
             // Simulaattori
             // 
@@ -86,6 +98,8 @@ namespace Tiea306
             this.Name = "Simulaattori";
             this.Text = "Simulaattori";
             this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -94,5 +108,6 @@ namespace Tiea306
         private System.Windows.Forms.Panel panel1;
         private OpenGL.GlControl glControl1;
         private System.Windows.Forms.Panel panel2;
+        private Label label1;
     }
 }
