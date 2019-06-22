@@ -38,13 +38,21 @@ namespace Tiea306
             Random r = new Random();
             for(int i = 0; i < 500; i++)
             {
-                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*2-1, r.NextDouble()*2-1, 0))*valovuosi;
+                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*10-5, r.NextDouble()*10-5, 0))*valovuosi;
                 double massa = r.NextDouble()*10;
                 Vertex3d kiihtyvyys = (new Vertex3d(0, 0, 0));
                 Vertex3d nopeus = (new Vertex3d(0 ,0, 0));
                 kappaleet[i] = new Kappale(sijainti, massa, kiihtyvyys, nopeus);
             }
+            /*
+            Vertex3d sijainti1 = new Vertex3d(0, 0, 0);
+            double massa1 = 10000;
+            Vertex3d kiihtyvyys1 = (new Vertex3d(0, 0, 0));
+            Vertex3d nopeus1 = (new Vertex3d(0, 0, 0));
+            kappaleet[500] = new Kappale(sijainti1, massa1, kiihtyvyys1, nopeus1);
+            */
             new Simulaattori(kappaleet).Show();
+            
         }
     }
 }

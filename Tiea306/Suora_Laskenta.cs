@@ -1,5 +1,6 @@
 ﻿using OpenGL;
 using System;
+using System.Windows.Forms;
 
 namespace Tiea306
 {
@@ -10,7 +11,7 @@ namespace Tiea306
         //Valovuosi astronomisissa yksiköissä.
         double valovuosi = 63239.7263;
         //Aika-askel
-        double aika = 1000;
+        public double aika = 1000;
 
         /// <summary>
         /// Metodi kappaleiden sijaintien päivittämiseen.
@@ -22,7 +23,7 @@ namespace Tiea306
              * Ulompi silmukka määrää kappaleen joka päivitetään, sisempi silmukka
              * on kaikkien muiden kappaleiden läpikäyntiä varten vuorovaikutusten 
              * laskemiseksi.
-             * TODO: Dynaaminen aika-askel
+             * TODO: Dynaaminen aika-askel. (Ehkä myös useampien ytimien hyödyntäminen tai CUDA?)
              */
             for (int i = 0; i < kappaleet.Length; i++)
             {
@@ -37,7 +38,7 @@ namespace Tiea306
                     Vertex3d sijainti_i = kappaleet[i].Sijainti;
                     Vertex3d sijainti_j = kappaleet[j].Sijainti;
                     //Lasketaan kappaleeseen kohdistuva kiihtyvyys kappaleesta j, ja summataan se yhteen aiempien kanssa.
-                    kiihtyvyys += (sijainti_i - sijainti_j) * massa_j / Math.Pow(Etäisyys(sijainti_i, sijainti_j), 3);  
+                    kiihtyvyys += (sijainti_i - sijainti_j) * massa_j / (Math.Pow(Etäisyys(sijainti_i, sijainti_j), 3) );  
                 }
                 //Lopulliseen kiihtyvyyteen otettava huomioon gravitaatiovakio.
                 kappaleet[i].Kiihtyvyys = kiihtyvyys * -gravitaatiovakio;
