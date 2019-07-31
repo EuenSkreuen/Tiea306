@@ -146,12 +146,11 @@
             // 
             // textBox1
             // 
-            this.textBox1.Enabled = false;
             this.textBox1.Location = new System.Drawing.Point(120, 37);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(124, 20);
             this.textBox1.TabIndex = 3;
-            this.textBox1.Text = "250";
+            this.textBox1.Text = "500";
             // 
             // label2
             // 
@@ -178,24 +177,26 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Enabled = false;
+            this.checkBox1.Checked = true;
+            this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBox1.Location = new System.Drawing.Point(120, 63);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(40, 17);
             this.checkBox1.TabIndex = 6;
             this.checkBox1.Text = "2D";
             this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Enabled = false;
             this.checkBox2.Location = new System.Drawing.Point(120, 86);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(40, 17);
             this.checkBox2.TabIndex = 7;
             this.checkBox2.Text = "3D";
             this.checkBox2.UseVisualStyleBackColor = true;
+            this.checkBox2.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
             // 
             // label3
             // 

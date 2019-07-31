@@ -34,11 +34,28 @@ namespace Tiea306
         {
             double valovuosi = 63239.7263;
             //TODO: Väliaikainen systeemi tähtien generointiin
-            Kappale[] kappaleet = new Kappale[500];
-            Random r = new Random();
-            for(int i = 0; i < 500; i++)
+            int n = 500;
+            try
             {
-                Vertex3d sijainti = (new Vertex3d(r.NextDouble()*10-5, r.NextDouble()*10-5, 0))*valovuosi;
+                n = Int32.Parse(textBox1.Text);
+            }
+            catch (FormatException)
+            {
+                //
+            }
+            Kappale[] kappaleet = new Kappale[n];
+            Random r = new Random();
+            for(int i = 0; i < n; i++)
+            {
+                Vertex3d sijainti;
+                if (checkBox2.Checked)
+                {
+                    sijainti = (new Vertex3d(r.NextDouble() * 10 - 5, r.NextDouble() * 10 - 5, r.NextDouble() * 10 - 5)) * valovuosi;
+                } else
+                {
+                    sijainti = (new Vertex3d(r.NextDouble() * 10 - 5, r.NextDouble() * 10 - 5, 0)) * valovuosi;
+                }
+                
                 double massa = r.NextDouble()*10;
                 Vertex3d kiihtyvyys = (new Vertex3d(0, 0, 0));
                 Vertex3d nopeus = (new Vertex3d(0 ,0, 0));
@@ -53,6 +70,16 @@ namespace Tiea306
             */
             new Simulaattori(kappaleet).Show();
             
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBox2.Checked = !checkBox1.Checked;
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBox1.Checked = !checkBox2.Checked;
         }
     }
 }

@@ -18,17 +18,30 @@ namespace Tiea306
         private Vertex3d kameranSijainti = new Vertex3d(0, 0, 0); //Kameran sijainti (skaalaamaton). Ei koske oikeaa kameraa, vaan kappaleiden sijaintia siirretään tämän perusteella.
         private Queue<Vertex3d>[] radat; //Taulukko jonoista joihin tallennetaan ratojen pisteet.
         private Kappale[] kappaleet; //Taulukko kappaleista joita simuloidaan.
+        private double energia; //Järjestelmän kokonaisenergia. Lasketaan alussa, jotta tähän verratessa nähdään kuinka paljon on muuttunut simulaation aikana.
+        private Vertex3d massakeskipiste; //Järjestelmän massakeskipiste. Lasketaan simulaation alussa. Ei pitäisi liikkua simulaation aikana koska ulkoisia voimia ei ole.
         public Simulaattori(Kappale[] kappaleet)
         {
             //Alustetaan kappalelista ja ratalista
             this.kappaleet = kappaleet;
             this.radat = new Queue<Vertex3d>[kappaleet.Length];
-            for(int i = 0; i < radat.Length;i++)
+            for (int i = 0; i < radat.Length; i++)
             {
                 radat[i] = new Queue<Vertex3d>();
             }
-            InitializeComponent(); 
+            //Lasketaan massakeskipiste ja aloitusenergia.
+            Vertex3d temp1 = new Vertex3d(0,0,0);
+            double temp2 = 0;
+            foreach(Kappale k in kappaleet)
+            {
+                temp1 += k.Sijainti * k.Massa;
+                temp2 += k.Massa;
+            }
+            massakeskipiste = temp1 / temp2;
+            energia = Energia(kappaleet, massakeskipiste);
             
+            InitializeComponent();
+            label9.Text = energia.ToString();
             //Tallennetaan piste josta kuvakulman raahaus hiirellä alkoi.
             this.glControl1.MouseDown += (sender, e) => { aloitusPiste = e.Location; };
             //Tallennetaan piste johon kuvakulman raahaus loppui.
@@ -130,6 +143,7 @@ namespace Tiea306
                 for(int i=0;i<radat.Length;i++)
                 {                    
                     //Piirretään rata. Piirto ennen päivitystä niin rata ei peitä tähteä.
+                    //TODO: kaatuu pienillä luvuilla jostain syystä
                     for (int j = 1; j < radat[j].Count-1; j++)
                     {
                         Gl.Vertex3(skaalattuKameranSijainti + norm(radat[i].ElementAt(j-1), -valovuosi * kerroin, valovuosi * kerroin, -1, 1));
@@ -162,6 +176,8 @@ namespace Tiea306
             }            
             label2.Text = kulunutAika.ToString("#,0") + " vuotta";
             kulunutAika += sl.aika;
+            //TODO: tee valinnaiseksi
+            label11.Text = Energia(kappaleet, massakeskipiste).ToString();
         }
 
         /// <summary>
@@ -188,6 +204,28 @@ namespace Tiea306
             double y = Math.Pow(a.y, 2);
             double z = Math.Pow(a.z, 2);
             return Math.Sqrt(x + y + z);
+        }
+
+        /// <summary>
+        /// Laskee annettujen kappaleiden kokonaisenergian massakeskipisteen avulla.
+        /// </summary>
+        /// <param name="kappaleet"></param>
+        /// <returns></returns>
+        private double Energia(Kappale[] kappaleet, Vertex3d massakeskipiste)
+        {
+            double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
+            double valovuosi = 63239.7263;
+            double kineettinenEnergia = 0;
+            double potentiaaliEnergia = 0;
+            foreach (Kappale k in kappaleet)
+            {
+                //Kineettinen energia
+                kineettinenEnergia += 0.5 * k.Massa * Math.Pow(Pituus(k.Sijainti), 2);
+                //Potentiaalienergia
+                //TODO: Tarkista että tosiaan lasketaan näin...
+                potentiaaliEnergia += k.Massa + gravitaatiovakio + Pituus(k.Sijainti - massakeskipiste);
+            }
+            return kineettinenEnergia + potentiaaliEnergia;
         }
     }
 }

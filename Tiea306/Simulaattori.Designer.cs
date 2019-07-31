@@ -36,6 +36,10 @@ namespace Tiea306
             this.panel1 = new System.Windows.Forms.Panel();
             this.glControl1 = new OpenGL.GlControl();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.rataViivojenPituus = new System.Windows.Forms.NumericUpDown();
             this.rataviivat = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.kiihtyvyysviivat = new System.Windows.Forms.CheckBox();
@@ -45,8 +49,8 @@ namespace Tiea306
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.rataViivojenPituus = new System.Windows.Forms.NumericUpDown();
-            this.label7 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.rataViivojenPituus)).BeginInit();
@@ -84,6 +88,10 @@ namespace Tiea306
             // 
             this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.panel2.Controls.Add(this.label11);
+            this.panel2.Controls.Add(this.label10);
+            this.panel2.Controls.Add(this.label9);
+            this.panel2.Controls.Add(this.label8);
             this.panel2.Controls.Add(this.label7);
             this.panel2.Controls.Add(this.rataViivojenPituus);
             this.panel2.Controls.Add(this.rataviivat);
@@ -99,6 +107,50 @@ namespace Tiea306
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(121, 527);
             this.panel2.TabIndex = 1;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(7, 356);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(13, 13);
+            this.label9.TabIndex = 14;
+            this.label9.Text = "0";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(7, 330);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(76, 13);
+            this.label8.TabIndex = 13;
+            this.label8.Text = "Aloitusenergia:";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(3, 195);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(97, 13);
+            this.label7.TabIndex = 12;
+            this.label7.Text = "Rataviivojen pituus";
+            // 
+            // rataViivojenPituus
+            // 
+            this.rataViivojenPituus.Location = new System.Drawing.Point(6, 211);
+            this.rataViivojenPituus.Minimum = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            this.rataViivojenPituus.Name = "rataViivojenPituus";
+            this.rataViivojenPituus.Size = new System.Drawing.Size(81, 20);
+            this.rataViivojenPituus.TabIndex = 11;
+            this.rataViivojenPituus.Value = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
             // 
             // rataviivat
             // 
@@ -184,31 +236,23 @@ namespace Tiea306
             this.label1.TabIndex = 0;
             this.label1.Text = "Simulaation tarkkuus:";
             // 
-            // rataViivojenPituus
+            // label10
             // 
-            this.rataViivojenPituus.Location = new System.Drawing.Point(6, 211);
-            this.rataViivojenPituus.Minimum = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
-            this.rataViivojenPituus.Name = "rataViivojenPituus";
-            this.rataViivojenPituus.Size = new System.Drawing.Size(81, 20);
-            this.rataViivojenPituus.TabIndex = 11;
-            this.rataViivojenPituus.Value = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(3, 382);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(122, 13);
+            this.label10.TabIndex = 15;
+            this.label10.Text = "Tämänhetkinen energia:";
             // 
-            // label7
+            // label11
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(3, 195);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(97, 13);
-            this.label7.TabIndex = 12;
-            this.label7.Text = "Rataviivojen pituus";
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(7, 411);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(13, 13);
+            this.label11.TabIndex = 16;
+            this.label11.Text = "0";
             // 
             // Simulaattori
             // 
@@ -244,5 +288,9 @@ namespace Tiea306
         private CheckBox rataviivat;
         private Label label7;
         private NumericUpDown rataViivojenPituus;
+        private Label label8;
+        private Label label9;
+        private Label label11;
+        private Label label10;
     }
 }
