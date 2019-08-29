@@ -208,12 +208,13 @@ namespace Tiea306
 
         /// <summary>
         /// Laskee annettujen kappaleiden kokonaisenergian massakeskipisteen avulla.
+        /// TODO: Täällä on korjattavaa
         /// </summary>
         /// <param name="kappaleet"></param>
         /// <returns></returns>
         private double Energia(Kappale[] kappaleet, Vertex3d massakeskipiste)
         {
-            double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
+            /*double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
             double valovuosi = 63239.7263;
             double kineettinenEnergia = 0;
             double potentiaaliEnergia = 0;
@@ -223,9 +224,20 @@ namespace Tiea306
                 kineettinenEnergia += 0.5 * k.Massa * Math.Pow(Pituus(k.Sijainti), 2);
                 //Potentiaalienergia
                 //TODO: Tarkista että tosiaan lasketaan näin...
-                potentiaaliEnergia += k.Massa + gravitaatiovakio + Pituus(k.Sijainti - massakeskipiste);
+                //potentiaaliEnergia += k.Massa + gravitaatiovakio + Pituus(k.Sijainti - massakeskipiste);
+                //Uusi versio, kirjasta tähtitieteen perusteet
+                double potentiaalienergia = 0;
+                for(int i = 0; i < kappaleet.Length; i++)
+                {
+                    for(int s = i + 1; s < kappaleet.Length; s++)
+                    {
+                        potentiaalienergia += (kappaleet[i].Massa * kappaleet[s].Massa) / Pituus(kappaleet[i].Sijainti - kappaleet[s].Sijainti);
+                    }
+                }
+                potentiaalienergia = -gravitaatiovakio * potentiaalienergia;
             }
-            return kineettinenEnergia + potentiaaliEnergia;
+            //return kineettinenEnergia + potentiaaliEnergia;*/
+            return 0;
         }
     }
 }
