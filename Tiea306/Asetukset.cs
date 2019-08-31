@@ -10,6 +10,7 @@ namespace Tiea306
         public Asetukset()
         {
             InitializeComponent();
+            metodi.SelectedIndex = 0;
         }
 
         private void Asetukset_Load(object sender, EventArgs e)
@@ -61,14 +62,7 @@ namespace Tiea306
                 Vertex3d nopeus = (new Vertex3d(0 ,0, 0));
                 kappaleet[i] = new Kappale(sijainti, massa, kiihtyvyys, nopeus);
             }
-            /*
-            Vertex3d sijainti1 = new Vertex3d(0, 0, 0);
-            double massa1 = 10000;
-            Vertex3d kiihtyvyys1 = (new Vertex3d(0, 0, 0));
-            Vertex3d nopeus1 = (new Vertex3d(0, 0, 0));
-            kappaleet[500] = new Kappale(sijainti1, massa1, kiihtyvyys1, nopeus1);
-            */
-            new Simulaattori(kappaleet).Show();
+            new Simulaattori(kappaleet, checkBox1.Checked, metodi.SelectedIndex, Convert.ToDouble(aikaAskel.Text)).Show();
             
         }
 

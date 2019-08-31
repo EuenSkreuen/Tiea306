@@ -12,7 +12,10 @@ namespace Tiea306
         double valovuosi = 63239.7263;
         //Aika-askel
         public double aika = 1000;
-
+        public void asetaAikaAskel(double aikaAskel)
+        {
+            aika = aikaAskel;
+        }
         /// <summary>
         /// Metodi kappaleiden sijaintien päivittämiseen.
         /// </summary>
@@ -23,7 +26,7 @@ namespace Tiea306
              * Ulompi silmukka määrää kappaleen joka päivitetään, sisempi silmukka
              * on kaikkien muiden kappaleiden läpikäyntiä varten vuorovaikutusten 
              * laskemiseksi.
-             * TODO: Dynaaminen aika-askel. (Ehkä myös useampien ytimien hyödyntäminen tai CUDA?)
+             * TODO: Dynaaminen aika-askel.
              */
             for (int i = 0; i < kappaleet.Length; i++)
             {

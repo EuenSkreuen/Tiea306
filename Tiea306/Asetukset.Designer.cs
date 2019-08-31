@@ -49,7 +49,7 @@
             this.checkBox3 = new System.Windows.Forms.CheckBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.aikaAskel = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
@@ -87,7 +87,7 @@
             this.toolStripMenuItem1,
             this.lopetaToolStripMenuItem});
             this.tiedostoToolStripMenuItem.Name = "tiedostoToolStripMenuItem";
-            this.tiedostoToolStripMenuItem.Size = new System.Drawing.Size(65, 20);
+            this.tiedostoToolStripMenuItem.Size = new System.Drawing.Size(64, 20);
             this.tiedostoToolStripMenuItem.Text = "Tiedosto";
             // 
             // uusiToolStripMenuItem
@@ -126,13 +126,13 @@
             // tietojaSovelluksestaToolStripMenuItem
             // 
             this.tietojaSovelluksestaToolStripMenuItem.Name = "tietojaSovelluksestaToolStripMenuItem";
-            this.tietojaSovelluksestaToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.tietojaSovelluksestaToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
             this.tietojaSovelluksestaToolStripMenuItem.Text = "Tietoja sovelluksesta";
             // 
             // näytäOhjeToolStripMenuItem
             // 
             this.näytäOhjeToolStripMenuItem.Name = "näytäOhjeToolStripMenuItem";
-            this.näytäOhjeToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.näytäOhjeToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
             this.näytäOhjeToolStripMenuItem.Text = "Näytä Ohje";
             // 
             // label1
@@ -164,11 +164,10 @@
             // metodi
             // 
             this.metodi.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.metodi.Enabled = false;
             this.metodi.FormattingEnabled = true;
             this.metodi.Items.AddRange(new object[] {
-            "Barnes-Hut algoritmi",
-            "Suora laskenta"});
+            "Suora laskenta",
+            "Barnes-Hut algoritmi"});
             this.metodi.Location = new System.Drawing.Point(120, 214);
             this.metodi.Name = "metodi";
             this.metodi.Size = new System.Drawing.Size(121, 21);
@@ -245,14 +244,13 @@
             this.label5.TabIndex = 12;
             this.label5.Text = "(valovuotta)";
             // 
-            // textBox3
+            // aikaAskel
             // 
-            this.textBox3.Enabled = false;
-            this.textBox3.Location = new System.Drawing.Point(120, 138);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(124, 20);
-            this.textBox3.TabIndex = 13;
-            this.textBox3.Text = "1";
+            this.aikaAskel.Location = new System.Drawing.Point(120, 138);
+            this.aikaAskel.Name = "aikaAskel";
+            this.aikaAskel.Size = new System.Drawing.Size(124, 20);
+            this.aikaAskel.TabIndex = 13;
+            this.aikaAskel.Text = "1000";
             // 
             // label6
             // 
@@ -309,7 +307,7 @@
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.textBox3);
+            this.Controls.Add(this.aikaAskel);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.checkBox3);
@@ -358,7 +356,7 @@
         private System.Windows.Forms.CheckBox checkBox3;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox aikaAskel;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ComboBox comboBox1;

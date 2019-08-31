@@ -68,6 +68,8 @@
       <DependentUpon>Asetukset.cs</DependentUpon>
     </Compile>
     <Compile Include="Kappale.cs" />
+    <Compile Include="Lehti2D.cs" />
+    <Compile Include="Lehti3D.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Simulaattori.cs">
