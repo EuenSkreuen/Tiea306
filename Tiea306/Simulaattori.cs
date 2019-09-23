@@ -15,7 +15,7 @@ namespace Tiea306
         private int radanPituus = 20; //Piirrettävien ratojen pituus. Vastaa tallennettavien pisteiden määrää, joista sitten rata piirretään.
         private Point aloitusPiste; //Piste josta hiirellä raahaus aloitettiin.
         private Vertex3d edellinenSijainti = new Vertex3d(0, 0, 0); //Aiempi sijainti johon hiirellä raahaus lopetettiin.
-        private Vertex3d kameranSijainti = new Vertex3d(0, 0, 0); //Kameran sijainti (skaalaamaton). Ei koske oikeaa kameraa, vaan kappaleiden sijaintia siirretään tämän perusteella.
+        private Vertex3d kameranSijainti = new Vertex3d(0, 0, 0); //Kameran sijainti (skaalaamaton).
         private Queue<Vertex3d>[] radat; //Taulukko jonoista joihin tallennetaan ratojen pisteet.
         private Kappale[] kappaleet; //Taulukko kappaleista joita simuloidaan.
         private Lehti2D juurisolmu2D; //Juurisolmu kaksiulotteista puuta varten
@@ -24,6 +24,10 @@ namespace Tiea306
         private double aikaAskel = 1;
         double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
         bool kaksiulotteinen = false;
+        double rotationX = 0;
+        double rotationY = 0;
+        double rotationZ = 0;
+        Matrix4x4d mvp;
         public Simulaattori(Kappale[] kappaleet, bool kaksiulotteinen, int algoritmi, double aikaAskel)
         {
             this.kaksiulotteinen = kaksiulotteinen;
@@ -41,6 +45,7 @@ namespace Tiea306
             {
                 BHViivat.Enabled = false;
             }
+
             //Tallennetaan piste josta kuvakulman raahaus hiirellä alkoi.
             this.glControl1.MouseDown += (sender, e) => { aloitusPiste = e.Location; };
             //Tallennetaan piste johon kuvakulman raahaus loppui.
@@ -56,9 +61,11 @@ namespace Tiea306
             //Siirretään kuvakulmaa hiiren liikkeen perusteella, jos vasen näppäin on pohjassa.
             this.glControl1.MouseMove += (sender, e) => 
             {
-                if (e.Button == MouseButtons.Left)
+                if(e.Button == MouseButtons.Left)
                 {
-                    kameranSijainti = new Vertex3d(edellinenSijainti.x + e.Location.X - aloitusPiste.X, edellinenSijainti.y + aloitusPiste.Y - e.Location.Y, 0);
+                    kameranSijainti = new Vertex3d(edellinenSijainti.x + e.Location.X - aloitusPiste.X, edellinenSijainti.y + aloitusPiste.Y - e.Location.Y, 0.0);
+                    rotationX = edellinenSijainti.y + aloitusPiste.Y - e.Location.Y;
+                    rotationY = edellinenSijainti.x + e.Location.X - aloitusPiste.X;
                 }
             };   
             //Tyhjennetään tallennetut ratojen pisteet. Tällä tavoin entinen rata ei tule uudelleen näkyville kun piirtäminen otetaan uudelleen käyttöön.
@@ -84,20 +91,25 @@ namespace Tiea306
             Control senderControl = (Control)sender;
             Gl.Viewport(0, 0, senderControl.ClientSize.Width, senderControl.ClientSize.Height);            
             Gl.Clear(ClearBufferMask.ColorBufferBit);
-            Gl.Clear(ClearBufferMask.DepthBufferBit);            
+            Gl.Clear(ClearBufferMask.DepthBufferBit);
+
+            //Asetetaan matriisi vektoreiden siirtämiseksi paikoilleen
+            Matrix4x4d perspective = Matrix4x4d.Perspective(45.0, 1.0, 0.1, 1000.0);
+            Matrix4x4d translate = Matrix4x4d.Translated(kameranSijainti.x, kameranSijainti.y, kameranSijainti.z);
+            Matrix4x4d rotateX = Matrix4x4d.RotatedX(rotationX);
+            Matrix4x4d rotateY = Matrix4x4d.RotatedY(rotationY);
+            Matrix4x4d rotateZ = Matrix4x4d.RotatedZ(rotationZ);
+            Matrix4x4d scale = Matrix4x4d.Scaled(1.0*kerroin, 1.0*kerroin, 1.0*kerroin);
+            Matrix4x4d m = Matrix4x4d.Identity;
+            Matrix4x4d v = translate * rotateX * rotateY * rotateZ * scale;
+            mvp = perspective * v * m;
 
             //Kappaleiden piirto
-            Gl.Begin(PrimitiveType.Points);            
-            Gl.Color3(1.0f, 1.0f, 1.0f);
-            Vertex3d skaalattuKameranSijaintiX = norm(kameranSijainti, -senderControl.ClientSize.Width / 2, senderControl.ClientSize.Width / 2, -1, 1);
-            Vertex3d skaalattuKameranSijaintiY = norm(kameranSijainti, -senderControl.ClientSize.Height / 2, senderControl.ClientSize.Height / 2, -1, 1);
-            Vertex3d skaalattuKameranSijainti = new Vertex3d(skaalattuKameranSijaintiX.x, skaalattuKameranSijaintiY.y, 0);
             foreach (Kappale k in kappaleet)
             {
                 Vertex3d s = k.Sijainti;
-                Gl.Vertex3(skaalattuKameranSijainti + (norm(s, -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+                drawStar(project((norm(s, -valovuosi, valovuosi, -1, 1))));
             }
-            Gl.End();
 
             //Nopeusviivat
             if(nopeusviivat.Checked == true)
@@ -109,9 +121,9 @@ namespace Tiea306
 
                     if (Pituus(k.Nopeus) > 0)
                     {
-                        Vertex3d v = k.Nopeus / Pituus(k.Nopeus);
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(k.Sijainti, -valovuosi * kerroin, valovuosi * kerroin, -1, 1) + v * 0.01);
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(k.Sijainti, -valovuosi * kerroin, valovuosi * kerroin, -1, 1) + v * 0.1 / kerroin + v * 0.02);
+                        Vertex3d vv = k.Nopeus / Pituus(k.Nopeus);
+                        Gl.Vertex3(project(norm(k.Sijainti, -valovuosi, valovuosi, -1, 1) + vv * 0.01));
+                        Gl.Vertex3(project(norm(k.Sijainti, -valovuosi, valovuosi, -1, 1) + vv * 0.1 + vv * 0.02));
                     }
                 }
                 Gl.End();
@@ -127,8 +139,8 @@ namespace Tiea306
                     if (Pituus(k.Kiihtyvyys) > 0)
                     {
                         Vertex3d s = k.Kiihtyvyys / Pituus(k.Kiihtyvyys);
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(k.Sijainti,-valovuosi * kerroin, valovuosi * kerroin,-1,1) + s * 0.01);
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(k.Sijainti, -valovuosi * kerroin, valovuosi * kerroin, -1, 1) + s * 0.1 / kerroin + s * 0.02);
+                        Gl.Vertex3(project(norm(k.Sijainti, -valovuosi, valovuosi, -1, 1) + s * 0.01));
+                        Gl.Vertex3(project(norm(k.Sijainti, -valovuosi, valovuosi, -1, 1) + s * 0.1 + s * 0.02));
                     }
                 }
                 Gl.End();
@@ -145,8 +157,8 @@ namespace Tiea306
                     //TODO: kaatuu pienillä luvuilla jostain syystä
                     for (int j = 1; j < radat[j].Count-1; j++)
                     {
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(radat[i].ElementAt(j-1), -valovuosi * kerroin, valovuosi * kerroin, -1, 1));
-                        Gl.Vertex3(skaalattuKameranSijainti + norm(radat[i].ElementAt(j), -valovuosi * kerroin, valovuosi * kerroin, -1, 1));
+                        Gl.Vertex3(project(norm(radat[i].ElementAt(j - 1), -valovuosi, valovuosi, -1, 1)));
+                        Gl.Vertex3(project(norm(radat[i].ElementAt(j), -valovuosi, valovuosi, -1, 1)));
                     }
                     //Tallennetaan listaan viimeisin sijainti, ja tyhjennetään toisesta päästä jos on tarvis.
                     if (radat[i].Count == radanPituus)
@@ -174,7 +186,6 @@ namespace Tiea306
             if (algoritmi == 1)
             {
                 //Barnes-Hut algoritmi
-                //TODO: Onko tarpeen muuttaa sellaiseksi että puu rakennetaan/muutetaan uudelleen vain jos se on tarpeen (eli kappale on liikkunut laatikon ulkopuolelle) 
                 //Rakennetaan puu (kaksi tai kolmiulotteinen versio
                 if (kaksiulotteinen)
                 {
@@ -200,7 +211,7 @@ namespace Tiea306
                         k.Nopeus = k.Nopeus + k.Kiihtyvyys * aikaAskel;
                     }
                     kulunutAika += aikaAskel;
-                    if (BHViivat.Checked) { piirrä2DPuu(juurisolmu2D, skaalattuKameranSijainti, kerroin); }
+                    if (BHViivat.Checked) { piirrä2DPuu(juurisolmu2D, kerroin); }
                 }
                 else
                 {
@@ -226,20 +237,9 @@ namespace Tiea306
                         k.Nopeus = k.Nopeus + k.Kiihtyvyys * aikaAskel;
                     }
                     kulunutAika += aikaAskel;
-                    if (BHViivat.Checked) { piirrä3DPuu(juurisolmu3D, skaalattuKameranSijainti, kerroin); }
+                    if (BHViivat.Checked) { piirrä3DPuu(juurisolmu3D, kerroin); }
                 }
 
-            }
-
-            //Barnes-Hut puun visualisointi
-            //TODO: tee ehdolliseksi (käyttäjä valitsee piirretäänkö laatikot vai ei
-            if (kaksiulotteinen&&BHViivat.Checked)
-            {
-                               
-            }
-            if (!kaksiulotteinen&&BHViivat.Checked)
-            {
-                
             }
 
             //Päivitetään käyttöliittymän tekstit.
@@ -488,6 +488,7 @@ namespace Tiea306
         /// <param name="juuri">Solmu johon halutaan sijoittaa kappale.</param>
         public void Sijoita3D(Kappale kappale, Lehti3D juuri)
         {
+            //TODO: piileskeleekö vika täällä?
             //Tapaus jossa tämä solmu on tyhjä
             if (juuri.OnkoTyhjä)
             {
@@ -741,9 +742,8 @@ namespace Tiea306
         /// Piirtää Barnes-Hut algoritmin kaksiulotteisessa avaruudessa vaatiman nelipuun.
         /// </summary>
         /// <param name="juuri">Solmu joka halutaan piirtää</param>
-        /// <param name="sks">kameran sijainnin parametri</param>
         /// <param name="k">kerroin laatikoiden koon skaalaamiseen</param>
-        public void piirrä2DPuu(Lehti2D juuri, Vertex3d sks, double k)
+        public void piirrä2DPuu(Lehti2D juuri, double k)
         {
             //Piirtää laatikon annetun solmun sijaintiin.            
             Vertex3d vasenAlanurkka = new Vertex3d(juuri.Sijainti.x - juuri.koko / 2, juuri.Sijainti.y - juuri.koko / 2, 0);
@@ -751,25 +751,25 @@ namespace Tiea306
             Gl.Begin(PrimitiveType.Lines);
             Gl.Color3(0.0f, 1.0f, 0.0f);
             //Viiva vasemmasta alanurkasta ylös.
-            Gl.Vertex3(sks + (norm(vasenAlanurkka, -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(0, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka, -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(0, koko, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva vasemmasta ylänurkasta oikeaan ylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(0, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(0, koko, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta ylänurkasta oikeaan alanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta alanurkasta vasempaan alanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenAlanurkka, -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenAlanurkka, -valovuosi, valovuosi, -1, 1)));
             Gl.End();
             //Piirtää tämän solmun sisäiset solmut, jos sellaisia on.
             if (juuri.OnkoJuuriSolmu)
             {
-                piirrä2DPuu(juuri.oikeaYlä,sks,k);
-                piirrä2DPuu(juuri.oikeaAla,sks,k);
-                piirrä2DPuu(juuri.vasenYlä,sks,k);
-                piirrä2DPuu(juuri.vasenAla,sks,k);
+                piirrä2DPuu(juuri.oikeaYlä,k);
+                piirrä2DPuu(juuri.oikeaAla,k);
+                piirrä2DPuu(juuri.vasenYlä,k);
+                piirrä2DPuu(juuri.vasenAla,k);
             }            
         }
 
@@ -777,65 +777,68 @@ namespace Tiea306
         /// Piirtää Barnes-Hut algoritmin kolmiulotteisessa avaruudessa vaatiman kahdeksanpuun.
         /// </summary>
         /// <param name="juuri">Solmu joka halutaan piirtää</param>
-        /// <param name="sks">kameran sijainnin parametri</param>
         /// <param name="k">kerroin laatikoiden koon skaalaamiseen</param>
-        public void piirrä3DPuu(Lehti3D juuri, Vertex3d sks, double k)
+        public void piirrä3DPuu(Lehti3D juuri, double k)
         {
-            //TODO: piirtyy purkkaliimamenetelmän takia päin helvettiä
-            //Piirtää laatikon annetun solmun sijaintiin.            
+            
+            //Piirtää laatikon annetun solmun sijaintiin.  
+            
             Vertex3d vasenEtuAlanurkka = new Vertex3d(juuri.Sijainti.x - juuri.koko / 2, juuri.Sijainti.y - juuri.koko / 2, juuri.Sijainti.z + juuri.koko / 2);
             double koko = juuri.koko;
             Gl.Begin(PrimitiveType.Lines);
             Gl.Color3(0.0f, 1.0f, 0.0f);
             //Viiva vasemmasta etualanurkasta vasempaan etuylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka, -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka, -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva vasemmasta etuylänurkasta oikeaan etuylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta etuylänurkasta oikeaan etualanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta etualanurkasta vasempaan etualanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka, -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka, -valovuosi, valovuosi, -1, 1)));
+
             //Viiva vasemmasta etualanurkasta vasempaan taka-alanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, 0, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva vasemmasta taka-alanurkasta vasempaan taka-ylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva vasemmasta takaylänurkasta vasempaan etuylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, 0), -valovuosi, valovuosi, -1, 1)));
+
             //Viiva vasemmasta taka-alanurkasta oikeaan taka-alanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, 0, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva vasemmasta takaylänurkasta oikeaan takaylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(0, koko, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta etuylänurkasta oikeaan takaylänurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, 0), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta takaylänurkasta oikeaan taka-alanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, koko, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi, valovuosi, -1, 1)));
             //Viiva oikeasta taka-alanurkasta oikeaan etualanurkkaan.
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
-            Gl.Vertex3(sks + (norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi * kerroin, valovuosi * kerroin, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, -koko), -valovuosi, valovuosi, -1, 1)));
+            Gl.Vertex3(project(norm(vasenEtuAlanurkka + new Vertex3d(koko, 0, 0), -valovuosi, valovuosi, -1, 1)));
             Gl.End();
             //Piirtää tämän solmun sisäiset solmut, jos sellaisia on.
             if (juuri.OnkoJuuriSolmu)
             {
-                piirrä3DPuu(juuri.A1, sks, k);
-                piirrä3DPuu(juuri.A2, sks, k);
-                piirrä3DPuu(juuri.A3, sks, k);
-                piirrä3DPuu(juuri.A4, sks, k);
-                piirrä3DPuu(juuri.B1, sks, k);
-                piirrä3DPuu(juuri.B2, sks, k);
-                piirrä3DPuu(juuri.B3, sks, k);
-                piirrä3DPuu(juuri.B4, sks, k);
+                piirrä3DPuu(juuri.A1, k);
+                piirrä3DPuu(juuri.A2, k);
+                piirrä3DPuu(juuri.A3, k);
+                piirrä3DPuu(juuri.A4, k);
+                piirrä3DPuu(juuri.B1, k);
+                piirrä3DPuu(juuri.B2, k);
+                piirrä3DPuu(juuri.B3, k);
+                piirrä3DPuu(juuri.B4, k);
             }
+            
         }
 
         /// <summary>
@@ -936,6 +939,45 @@ namespace Tiea306
             double y = Math.Pow(b.y - a.y, 2);
             double z = Math.Pow(b.z - a.z, 2);
             return Math.Sqrt(x + y + z);
+        }
+        /// <summary>
+        /// Siirtää vektorin kameran sijainnin ja rotaation perusteella.
+        /// </summary>
+        /// <param name="a">Vektori jota siirretään</param>
+        /// <returns></returns>
+        private Vertex3d project(Vertex3d a)
+        {
+            Matrix4x4d perspective = Matrix4x4d.Perspective(45.0, 1.0, 0.1, 1000.0);
+            Matrix4x4d translate = Matrix4x4d.Translated(0, 0, 0-1);
+            Matrix4x4d rotateX = Matrix4x4d.RotatedX(rotationX);
+            Matrix4x4d rotateY = Matrix4x4d.RotatedY(rotationY);
+            Matrix4x4d rotateZ = Matrix4x4d.RotatedZ(rotationZ);
+            Matrix4x4d scale = Matrix4x4d.Scaled(1.0/kerroin, 1.0/kerroin, 1.0/kerroin);
+            Matrix4x4d m = Matrix4x4d.Identity;
+            Matrix4x4d v = translate * rotateX * rotateY * rotateZ * scale;
+            Matrix4x4d mvp2 = perspective * v * m;
+
+            Vertex4d vv = new Vertex4d(a.x, a.y, a.z);   
+            Vertex3d b = (Vertex3d)(mvp2 * vv);              
+            return b;
+        }
+
+        /// <summary>
+        /// Piirtää tähden annettuun sijaintiin. Tähti piirretään kolmella risteävällä viivalla.
+        /// </summary>
+        /// <param name="center">Tähden sijainti</param>
+        private void drawStar(Vertex3d center)
+        {
+
+            Gl.Begin(PrimitiveType.Lines);
+            Gl.Color3(1.0f, 1.0f, 1.0f);
+            Gl.Vertex3(center + new Vertex3d(0, 0, -0.005));
+            Gl.Vertex3(center + new Vertex3d(0, 0, 0.005));
+            Gl.Vertex3(center + new Vertex3d(0, -0.005, 0));
+            Gl.Vertex3(center + new Vertex3d(0, 0.005, 0));
+            Gl.Vertex3(center + new Vertex3d(-0.005, 0, 0));
+            Gl.Vertex3(center + new Vertex3d(0.005, 0, 0));
+            Gl.End();            
         }
     }
 }
