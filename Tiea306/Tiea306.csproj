@@ -79,7 +79,6 @@
       <DependentUpon>Simulaattori.cs</DependentUpon>
     </Compile>
     <Compile Include="Suora_Laskenta.cs" />
-    <Compile Include="Tallennus.cs" />
     <EmbeddedResource Include="Asetukset.resx">
       <DependentUpon>Asetukset.cs</DependentUpon>
     </EmbeddedResource>

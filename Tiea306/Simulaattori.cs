@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using OpenGL;
@@ -8,7 +9,7 @@ using OpenGL;
 namespace Tiea306
 {
     public partial class Simulaattori : Form
-    {
+    {        
         private double valovuosi = 63239.7263; //Valovuosi astronomisissa yksiköissä
         private double kerroin = 1; //Kerroin zoomausta varten
         private double kulunutAika = 0; //Kuinka pitkä ajanjakso on simuloitu
@@ -21,29 +22,74 @@ namespace Tiea306
         private Lehti2D juurisolmu2D; //Juurisolmu kaksiulotteista puuta varten
         private Lehti3D juurisolmu3D; //Juurisolmu kolmiulotteista puuta varten
         private int algoritmi = 0; //Mitä algoritmia käytetään. 0 = suora laskenta, 1 = Barnes-Hut algoritmi
-        private double aikaAskel = 1;
-        double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
-        bool kaksiulotteinen = false;
-        double rotationX = 0;
-        double rotationY = 0;
-        double rotationZ = 0;
-        Matrix4x4d mvp;
-        public Simulaattori(Kappale[] kappaleet, bool kaksiulotteinen, int algoritmi, double aikaAskel)
+        private double aikaAskel = 1; //Simulaation aika-askel vuosissa
+        private double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2); //Gravitaatiovakio
+        private bool kaksiulotteinen = false; //Suoritetaanko simulaatio kaksiulotteisena
+        private double rotationX = 0; //Kierto x-akselin suhteen asteissa
+        private double rotationY = 0; //Kierto y-akselin suhteen asteissa
+        private double rotationZ = 0; //Kierto z-akselin suhteen asteissa
+        Matrix4x4d mvp; //Matriisi simulaation kameran toimintaa varten
+        private String tiedostoSijainti = ""; //Tiedostosijainti jossa simulaatio on. Tyhjä jos ei tallenneta tai toisteta.
+        private bool tallenna = false; //Tallennetaanko simulaatio
+        private bool toista = false; //Toistetaanko simulaatiota tiedostosta
+
+        /// <summary>
+        /// Simulaattori. Laskee kappaleiden liikkeet, tai toistaa ne annetusta tiedostosijainnista.
+        /// </summary>
+        /// <param name="kappaleet">Lista simuloitavista kappaleista. Jätä tyhjäksi jos toistetaan.</param>
+        /// <param name="kaksiulotteinen">Suoritetaanko simulaatio kaksiulotteisena.</param>
+        /// <param name="algoritmi">Käytettävä algoritmi simulaatiossa. Suora voimien laskenta = 0, ja Barnes-Hut algoritmi = 1.</param>
+        /// <param name="aikaAskel">Simulaatiossa käytettävä aika-askel.</param>
+        /// <param name="tallennetaanko">Tallennetaanko simulaatio.</param>
+        /// <param name="toistetaanko">Käynnistetäänkö simulaattori toistotilassa. Tällöin jotkin ominaisuudet ovat pois käytöstä.</param>
+        /// <param name="polku">Tiedostopolku johon simulaatio tallennetaan, tai josta sitä luetaan.</param>
+        public Simulaattori(Kappale[] kappaleet, bool kaksiulotteinen, int algoritmi, double aikaAskel, bool tallennetaanko, bool toistetaanko, String polku)
         {
-            this.kaksiulotteinen = kaksiulotteinen;
-            this.algoritmi = algoritmi;
-            this.aikaAskel = aikaAskel;
-            //Alustetaan kappalelista ja ratalista
-            this.kappaleet = kappaleet;
-            this.radat = new Queue<Vertex3d>[kappaleet.Length];
-            for (int i = 0; i < radat.Length; i++)
+            //Alustetaan simulaatio annettujen tietojen pohjalta
+            if (toistetaanko)
             {
-                radat[i] = new Queue<Vertex3d>();
+                try
+                {
+                    //Alustetaan simulaatio toistoa varten
+                    this.kappaleet = kappaleet;
+                    this.kaksiulotteinen = kaksiulotteinen;
+                    this.algoritmi = algoritmi;
+                    this.aikaAskel = aikaAskel;
+                    toista = toistetaanko;
+                    tallenna = tallennetaanko;
+                    tiedostoSijainti = polku;                    
+                    InitializeComponent();
+                    this.Text = polku;
+                    BHViivat.Enabled = false;
+                    nopeusviivat.Enabled = false;
+                    kiihtyvyysviivat.Enabled = false;
+                    rataviivat.Enabled = false;
+                    rataViivojenPituus.Enabled = false;
+                } catch (Exception e)
+                {
+                    MessageBox.Show(e.Message, "Virhe", MessageBoxButtons.OK);
+                    this.Close();
+                }                
             }
-            InitializeComponent();
-            if (algoritmi == 0)
-            {
-                BHViivat.Enabled = false;
+            else {
+                //Alustetaan simulaatio normaalisti
+                this.kappaleet = kappaleet;
+                this.kaksiulotteinen = kaksiulotteinen;
+                this.algoritmi = algoritmi;
+                this.aikaAskel = aikaAskel;
+                toista = toistetaanko;
+                tallenna = tallennetaanko;
+                tiedostoSijainti = polku;
+                this.radat = new Queue<Vertex3d>[kappaleet.Length];
+                for (int i = 0; i < radat.Length; i++)
+                {
+                    radat[i] = new Queue<Vertex3d>();
+                }
+                InitializeComponent();
+                if (algoritmi == 0)
+                {
+                    BHViivat.Enabled = false;
+                }
             }
 
             //Tallennetaan piste josta kuvakulman raahaus hiirellä alkoi.
@@ -78,14 +124,21 @@ namespace Tiea306
             };            
         }
 
+        //Tapahtumankäsittelijä simulaation ikkunan luontihetkelle
         private void glControl1_ContextCreated(object sender, GlControlEventArgs e)
         {
             Control senderControl = (Control)sender;
             Gl.Enable(EnableCap.DepthTest);
             Gl.DepthFunc(DepthFunction.Less);
             Gl.MatrixMode(MatrixMode.Projection);
+            if (toista)
+            {
+                kulunutAika = aikaAskel;
+                glControl1.AnimationTime = 34;
+            }
         }
 
+        //Tapahtumankäsittelijä simulaation ikkunan päivitykselle. Käytännössä sisältää pääsilmukan.
         private void glControl1_Render(object sender, GlControlEventArgs e)
         {
             Control senderControl = (Control)sender;
@@ -95,15 +148,40 @@ namespace Tiea306
 
             //Asetetaan matriisi vektoreiden siirtämiseksi paikoilleen
             Matrix4x4d perspective = Matrix4x4d.Perspective(45.0, 1.0, 0.1, 1000.0);
-            Matrix4x4d translate = Matrix4x4d.Translated(kameranSijainti.x, kameranSijainti.y, kameranSijainti.z);
+            Matrix4x4d translate = Matrix4x4d.Translated(0, 0, 0 - 1);
             Matrix4x4d rotateX = Matrix4x4d.RotatedX(rotationX);
             Matrix4x4d rotateY = Matrix4x4d.RotatedY(rotationY);
             Matrix4x4d rotateZ = Matrix4x4d.RotatedZ(rotationZ);
-            Matrix4x4d scale = Matrix4x4d.Scaled(1.0*kerroin, 1.0*kerroin, 1.0*kerroin);
+            Matrix4x4d scale = Matrix4x4d.Scaled(1.0 / kerroin, 1.0 / kerroin, 1.0 / kerroin);
             Matrix4x4d m = Matrix4x4d.Identity;
             Matrix4x4d v = translate * rotateX * rotateY * rotateZ * scale;
             mvp = perspective * v * m;
 
+            //Kappalelistan päivitys, jos ollaan toistotilassa
+            if (toista)
+            {
+                try
+                {
+                    haeKappaleet(tiedostoSijainti + "/" + kulunutAika.ToString() + ".txt", kappaleet);
+                    kulunutAika += aikaAskel;
+                }
+                catch (Exception)
+                {
+                    //Oletetaan että saavuttiin tallennettujen askelten loppuun, joten aloitetaan alusta.
+                    try
+                    {
+                        kulunutAika = aikaAskel;
+                        haeKappaleet(tiedostoSijainti + "/" + kulunutAika.ToString() + ".txt", kappaleet);
+                    }
+                    catch (Exception a)
+                    {
+                        //Virhe johtuu jostain muusta. Keskeytetään suoritus.
+                        MessageBox.Show(a.Message, "Virhe", MessageBoxButtons.OK);
+                        this.Close();
+                    }
+                }
+
+            }
             //Kappaleiden piirto
             foreach (Kappale k in kappaleet)
             {
@@ -154,7 +232,7 @@ namespace Tiea306
                 for(int i=0;i<radat.Length;i++)
                 {                    
                     //Piirretään rata. Piirto ennen päivitystä niin rata ei peitä tähteä.
-                    //TODO: kaatuu pienillä luvuilla jostain syystä
+                    //TODO: Saattaa kaatua pienillä luvuilla
                     for (int j = 1; j < radat[j].Count-1; j++)
                     {
                         Gl.Vertex3(project(norm(radat[i].ElementAt(j - 1), -valovuosi, valovuosi, -1, 1)));
@@ -173,17 +251,17 @@ namespace Tiea306
                 Gl.End();
             }
 
-            //Voimien laskenta
-            if (algoritmi == 0)
+            //Voimien laskenta            
+            if (algoritmi == 0 && !toista)
             {
                 //Suora laskenta
-                //TODO: suora laskenta voisi olla vain metodi
+                //TODO: Muuta suora laskenta pelkäksi metodiksi, ei tarvitse oliota.
                 Suora_Laskenta sl = new Suora_Laskenta();
                 sl.asetaAikaAskel(aikaAskel);
                 sl.päivitä(kappaleet);
                 kulunutAika += sl.aika;
             }
-            if (algoritmi == 1)
+            if (algoritmi == 1 && !toista)
             {
                 //Barnes-Hut algoritmi
                 //Rakennetaan puu (kaksi tai kolmiulotteinen versio
@@ -250,7 +328,21 @@ namespace Tiea306
             {
                 label3.Text = kerroin.ToString() + " valovuotta";
             }            
-            label2.Text = kulunutAika.ToString("#,0") + " vuotta";            
+            label2.Text = kulunutAika.ToString("#,0") + " vuotta";
+
+            //Tallennetaan simulaation askelet, mikäli käyttäjä on niin valinnut
+            //TODO: Laske kulutettu tila ja näytä se käyttäjälle.
+            if (tallenna)
+            {
+                try
+                {
+                    tallennaKappaleet(kappaleet, tiedostoSijainti + "/" + kulunutAika.ToString() + ".txt");
+                } catch (Exception ee)
+                {
+                    MessageBox.Show(ee.Message, "Virhe", MessageBoxButtons.OK);
+                    this.Close();
+                }                
+            }
         }
 
         /// <summary>
@@ -286,18 +378,14 @@ namespace Tiea306
         /// <returns></returns>
         private double Energia(Kappale[] kappaleet, Vertex3d massakeskipiste)
         {
-            //TODO: Täällä on korjattavaa
-            /*double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
-            double valovuosi = 63239.7263;
+            //TODO: Testaa toimivuus.
+            double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
             double kineettinenEnergia = 0;
             double potentiaaliEnergia = 0;
             foreach (Kappale k in kappaleet)
             {
                 //Kineettinen energia
                 kineettinenEnergia += 0.5 * k.Massa * Math.Pow(Pituus(k.Sijainti), 2);
-                //Potentiaalienergia
-                //TODO: Tarkista että tosiaan lasketaan näin...
-                //potentiaaliEnergia += k.Massa + gravitaatiovakio + Pituus(k.Sijainti - massakeskipiste);
                 //Uusi versio, kirjasta tähtitieteen perusteet
                 double potentiaalienergia = 0;
                 for(int i = 0; i < kappaleet.Length; i++)
@@ -309,8 +397,7 @@ namespace Tiea306
                 }
                 potentiaalienergia = -gravitaatiovakio * potentiaalienergia;
             }
-            //return kineettinenEnergia + potentiaaliEnergia;*/
-            return 0;
+            return kineettinenEnergia + potentiaaliEnergia;            
         }
 
         /// <summary>
@@ -488,7 +575,7 @@ namespace Tiea306
         /// <param name="juuri">Solmu johon halutaan sijoittaa kappale.</param>
         public void Sijoita3D(Kappale kappale, Lehti3D juuri)
         {
-            //TODO: piileskeleekö vika täällä?
+            //TODO: 3D BH-puu joko piirtyy väärin, tai kappaleet tulee sijoitetuksi puuhun väärin.
             //Tapaus jossa tämä solmu on tyhjä
             if (juuri.OnkoTyhjä)
             {
@@ -947,23 +1034,14 @@ namespace Tiea306
         /// <returns></returns>
         private Vertex3d project(Vertex3d a)
         {
-            Matrix4x4d perspective = Matrix4x4d.Perspective(45.0, 1.0, 0.1, 1000.0);
-            Matrix4x4d translate = Matrix4x4d.Translated(0, 0, 0-1);
-            Matrix4x4d rotateX = Matrix4x4d.RotatedX(rotationX);
-            Matrix4x4d rotateY = Matrix4x4d.RotatedY(rotationY);
-            Matrix4x4d rotateZ = Matrix4x4d.RotatedZ(rotationZ);
-            Matrix4x4d scale = Matrix4x4d.Scaled(1.0/kerroin, 1.0/kerroin, 1.0/kerroin);
-            Matrix4x4d m = Matrix4x4d.Identity;
-            Matrix4x4d v = translate * rotateX * rotateY * rotateZ * scale;
-            Matrix4x4d mvp2 = perspective * v * m;
-
             Vertex4d vv = new Vertex4d(a.x, a.y, a.z);   
-            Vertex3d b = (Vertex3d)(mvp2 * vv);              
+            Vertex3d b = (Vertex3d)(mvp * vv);              
             return b;
         }
 
         /// <summary>
         /// Piirtää tähden annettuun sijaintiin. Tähti piirretään kolmella risteävällä viivalla.
+        /// Tämä funktio on tarpeen koska pisteet näkyy vain tietyn matkan päähän
         /// </summary>
         /// <param name="center">Tähden sijainti</param>
         private void drawStar(Vertex3d center)
@@ -978,6 +1056,49 @@ namespace Tiea306
             Gl.Vertex3(center + new Vertex3d(-0.005, 0, 0));
             Gl.Vertex3(center + new Vertex3d(0.005, 0, 0));
             Gl.End();            
+        }
+
+        /// <summary>
+        /// Tallentaa annettujen kappaleiden sijainnit tekstitiedostoon.
+        /// </summary>
+        /// <param name="kappaleet">Lista kappaleista.</param>
+        /// <param name="polku">Tallennussijainti tiedostopäätteineen.</param>
+        public static void tallennaKappaleet(Kappale[] kappaleet, String polku)
+        {            
+            try
+            {
+                StreamWriter s = new StreamWriter(polku);
+                foreach(Kappale k in kappaleet)
+                {
+                    s.WriteLine(                        
+                        k.Sijainti.x.ToString("R") + " " + k.Sijainti.y.ToString("R") + " " + k.Sijainti.z.ToString("R"));
+                }
+                s.Close();
+            } catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Päivittää kappaleet annetusta tekstitiedostosta
+        /// </summary>
+        /// <param name="polku">Tiedostopolku tekstitiedostoon</param>
+        /// <param name="kappaleet">Kappaleet joiden sijainnit päivitetään</param>
+        public void haeKappaleet(String polku, Kappale[] kappaleet)
+        {
+            try
+            {
+                StreamReader s = new StreamReader(polku);
+                foreach(Kappale k in kappaleet)
+                {
+                    string[] tiedot = s.ReadLine().Split(null);
+                    k.Sijainti = new Vertex3d(Double.Parse(tiedot[0]), Double.Parse(tiedot[1]), Double.Parse(tiedot[2]));
+                }
+            } catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }

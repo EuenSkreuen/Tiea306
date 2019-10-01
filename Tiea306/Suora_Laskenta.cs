@@ -26,7 +26,6 @@ namespace Tiea306
              * Ulompi silmukka määrää kappaleen joka päivitetään, sisempi silmukka
              * on kaikkien muiden kappaleiden läpikäyntiä varten vuorovaikutusten 
              * laskemiseksi.
-             * TODO: Dynaaminen aika-askel.
              */
             for (int i = 0; i < kappaleet.Length; i++)
             {
