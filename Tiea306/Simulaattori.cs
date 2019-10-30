@@ -5,7 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using OpenGL;
-
+/*
+ * Tämä tiedosto sisältää itse simulaattorin ja sen tarvitsemat osat.
+ * Sisältää myös simulaattorin käyttöliittymään tarvittavaa koodia.
+ * 
+ * Tekijä: Aapo Peiponen
+ */
 namespace Tiea306
 {
     public partial class Simulaattori : Form
@@ -232,7 +237,6 @@ namespace Tiea306
                 for(int i=0;i<radat.Length;i++)
                 {                    
                     //Piirretään rata. Piirto ennen päivitystä niin rata ei peitä tähteä.
-                    //TODO: Saattaa kaatua pienillä luvuilla
                     for (int j = 1; j < radat[j].Count-1; j++)
                     {
                         Gl.Vertex3(project(norm(radat[i].ElementAt(j - 1), -valovuosi, valovuosi, -1, 1)));
@@ -255,7 +259,6 @@ namespace Tiea306
             if (algoritmi == 0 && !toista)
             {
                 //Suora laskenta
-                //TODO: Muuta suora laskenta pelkäksi metodiksi, ei tarvitse oliota.
                 Suora_Laskenta sl = new Suora_Laskenta();
                 sl.asetaAikaAskel(aikaAskel);
                 sl.päivitä(kappaleet);
@@ -378,7 +381,6 @@ namespace Tiea306
         /// <returns></returns>
         private double Energia(Kappale[] kappaleet, Vertex3d massakeskipiste)
         {
-            //TODO: Testaa toimivuus.
             double gravitaatiovakio = 4 * Math.Pow(Math.PI, 2);
             double kineettinenEnergia = 0;
             double potentiaaliEnergia = 0;
@@ -575,7 +577,6 @@ namespace Tiea306
         /// <param name="juuri">Solmu johon halutaan sijoittaa kappale.</param>
         public void Sijoita3D(Kappale kappale, Lehti3D juuri)
         {
-            //TODO: 3D BH-puu joko piirtyy väärin, tai kappaleet tulee sijoitetuksi puuhun väärin.
             //Tapaus jossa tämä solmu on tyhjä
             if (juuri.OnkoTyhjä)
             {

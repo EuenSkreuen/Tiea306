@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+/*
+ * 3-ulotteisen Barnes-Hut puun lehtisolmu
+ * 
+ * Tekijä: Aapo Peiponen
+ */
 namespace Tiea306
 {
     public class Lehti3D

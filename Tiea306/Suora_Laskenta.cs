@@ -1,7 +1,11 @@
 ﻿using OpenGL;
 using System;
 using System.Windows.Forms;
-
+/*
+ * Sisältää suoran laskennan simulaatioille.
+ * 
+ * Tekijä: Aapo Peiponen
+ */
 namespace Tiea306
 {
     class Suora_Laskenta

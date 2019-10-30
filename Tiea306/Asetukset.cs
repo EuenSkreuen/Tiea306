@@ -4,7 +4,11 @@ using System.IO;
 using OpenGL;
 using System.Collections.Generic;
 using System.Linq;
-
+/*
+ * Tämä sisältää asetusikkunaan liittyvät koodit.
+ * 
+ * Tekijä: Aapo Peiponen
+ */
 namespace Tiea306
 {
     //TODO: Virheenkäsittelijät, syötteiden validointi reaaliaikaisesti, näytä tallennetun simulaation tiedot kun se on valittuna
