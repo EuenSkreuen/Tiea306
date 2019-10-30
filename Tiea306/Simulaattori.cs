@@ -334,7 +334,6 @@ namespace Tiea306
             label2.Text = kulunutAika.ToString("#,0") + " vuotta";
 
             //Tallennetaan simulaation askelet, mikäli käyttäjä on niin valinnut
-            //TODO: Laske kulutettu tila ja näytä se käyttäjälle.
             if (tallenna)
             {
                 try

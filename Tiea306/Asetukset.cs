@@ -11,8 +11,6 @@ using System.Linq;
  */
 namespace Tiea306
 {
-    //TODO: Virheenkäsittelijät, syötteiden validointi reaaliaikaisesti, näytä tallennetun simulaation tiedot kun se on valittuna
-    //TODO: Lisää valinta simulaation askelten tallentamiseksi vain tietyin intervallein tilan säästämiseksi.
     public partial class Asetukset : Form
     {
         public Asetukset()
@@ -49,18 +47,22 @@ namespace Tiea306
             try
             {
                 n = Int32.Parse(maara.Text);
-            } catch (Exception)
-            {
-                //
-            }   
-            if (tallenna.Checked)
-            {
-                Directory.CreateDirectory("/simulations/" + nimi.Text);
-                string tiedot = nimi.Text + " " + maara.Text + " " + onko2D.Checked + " " + aikaAskel.Text + " " + metodi.SelectedIndex;
-                File.WriteAllText("/simulations/" + nimi.Text + "/info.txt", tiedot);
+                if (tallenna.Checked)
+                {
+                    Directory.CreateDirectory("/simulations/" + nimi.Text);
+                    string tiedot = nimi.Text + " " + maara.Text + " " + onko2D.Checked + " " + aikaAskel.Text + " " + metodi.SelectedIndex;
+                    File.WriteAllText("/simulations/" + nimi.Text + "/info.txt", tiedot);
+                   
+                }
+                new Simulaattori(Generoi(n), onko2D.Checked, metodi.SelectedIndex, Convert.ToDouble(aikaAskel.Text), tallenna.Checked, false, "/simulations/" + nimi.Text).Show();
+
             }
-            new Simulaattori(Generoi(n), onko2D.Checked, metodi.SelectedIndex, Convert.ToDouble(aikaAskel.Text), tallenna.Checked, false, "/simulations/" + nimi.Text).Show();            
-        }
+            catch (Exception)
+            {
+                MessageBox.Show("Virheellinen syöte!");
+            }   
+           
+            }
         //Tapahtumankäsittelijä 2D valintalaatikolle
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
